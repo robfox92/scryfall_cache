@@ -106,7 +106,7 @@ class ScryfallCache(object):
         """
         return self.app.user_data_dir
 
-    def get_card(self, name: str | None = None, scryfall_id: str | None =None, mtgo_id: int | None = None, fuzzy_name = False):
+    def get_card(self, name: str | None = None, scryfall_id: str | None =None, mtgo_id: int | None = None, arena_id: int | None, fuzzy_name = False):
         """
         Attempt to get a ScryfallCard object for any given identifiers.
 
@@ -129,6 +129,8 @@ class ScryfallCache(object):
             card_dict = self._card_from_id(scryfall_id)
         elif mtgo_id is not None:
             card_dict = self._card_from_mtgo_id(mtgo_id)
+        elif arena_id is not None:
+            card_dict = self._card_from_arena_id(arena_id)
         else:
             raise ScryfallCacheException("Require at least one identifier to query on")
 
@@ -212,6 +214,50 @@ class ScryfallCache(object):
             # Query the API for what Scryfall thinks is correct.
             card_json = self._query_scryfall(
                 "https://api.scryfall.com/cards/named?{params}".format(params=params),
+                timeout=ONE_DAY,
+            )
+
+            if card_json and len(cards_json) == 0:
+                # Save this card for future as no cards were found first time.
+                self._save_card(card_json)
+
+        return card_json
+    
+    def _card_from_arena_id(self, arena_id: int):
+        """Request a card dictionary by Arena ID.
+
+        Args:
+            arena_id(int): The MTG Arena ID of the card.
+
+        Returns:
+            Dictionary of card data if card is found, else None.
+
+        """
+        with orm.db_session:
+            # Search for the normal or foil version of the card.
+            results = orm.select(
+                c for c in self.db.Card
+                if c.arena_id == arena_id
+            )
+            if not results:
+                results = []
+
+            cards_json = [m.data for m in results]
+
+        if len(cards_json) == 1:
+            log.debug("Returning single result for Arena ID %d", arena_id)
+            card_json = cards_json[0]
+
+        else:
+            log.debug(
+                "Expected 1 result for Arena ID %d, got %d results instead",
+                arena_id,
+                len(cards_json),
+            )
+
+            # Query the API for what Scryfall thinks is correct.
+            card_json = self._query_scryfall(
+                "https://api.scryfall.com/cards/arena/{arena_id}".format(arena_id=arena_id),
                 timeout=ONE_DAY,
             )
 
@@ -552,6 +598,7 @@ def define_entities(db):
         name = orm.Required(str, index=True)
         mtgo_id = orm.Optional(int, index=True)
         mtgo_foil_id = orm.Optional(int, index=True)
+        arena_id = orm.Optional(int, index=True)
         data = orm.Required(orm.Json)
 
     class Metadata(db.Entity):
