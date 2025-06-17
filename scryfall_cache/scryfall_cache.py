@@ -270,13 +270,7 @@ class ScryfallCache(object):
 
     def _check_database(self):
         with orm.db_session:
-            try:
-                metadata = orm.select(m for m in self.db.Metadata).first()
-            except:
-                # Create a new metadata object. Record the version of ScryfallCache
-                # that we're using here, so we can migrate later.
-                metadata = self.db.Metadata(lastupdate=0, version=__version__)
-
+            metadata = self.db.Metadata.select().first()
             if not metadata:
                 # Create a new metadata object. Record the version of ScryfallCache
                 # that we're using here, so we can migrate later.
