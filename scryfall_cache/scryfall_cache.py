@@ -106,7 +106,7 @@ class ScryfallCache(object):
         """
         return self.app.user_data_dir
 
-    def get_card(self, name: str | None = None, scryfall_id: str | None =None, mtgo_id: int | None = None, arena_id: int | None, fuzzy_name = False):
+    def get_card(self, name: str | None = None, scryfall_id: str | None =None, mtgo_id: int | None = None, arena_id: int | None = None, fuzzy_name = False):
         """
         Attempt to get a ScryfallCard object for any given identifiers.
 
