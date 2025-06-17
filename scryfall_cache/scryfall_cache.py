@@ -380,6 +380,8 @@ class ScryfallCache(object):
                     name=card_obj["name"],
                     mtgo_id=card_obj.get("mtgo_id", None),
                     mtgo_foil_id=card_obj.get("mtgo_foil_id", None),
+                    arena_id = card_obj.get("arena_id", None),
+                    oracle_id = card_obj.get("oracle_id", None),
                     data=card_obj,
                 )
 
