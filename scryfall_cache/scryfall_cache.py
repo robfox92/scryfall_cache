@@ -106,7 +106,7 @@ class ScryfallCache(object):
         """
         return self.app.user_data_dir
 
-    def get_card(self, name=None, scryfall_id=None, mtgo_id=None):
+    def get_card(self, name=None, scryfall_id=None, mtgo_id=None, fuzzy_name = False):
         """
         Attempt to get a ScryfallCard object for any given identifiers.
 
@@ -114,6 +114,7 @@ class ScryfallCache(object):
             name (str): The name of the card if known.
             scryfall_id (str): The Scryfall ID of the card if known.
             mtgo_id (int): The MTGO ID of the card if known.
+            fuzzy_name (bool): Whether or not to use fuzzy search on the name
 
         Raises:
             ScryfallCacheException: if no identifiers are given.
@@ -123,7 +124,7 @@ class ScryfallCache(object):
 
         """
         if name is not None:
-            card_dict = self._card_from_name(name)
+            card_dict = self._card_from_name(name, fuzzy_name)
         elif scryfall_id is not None:
             card_dict = self._card_from_id(scryfall_id)
         elif mtgo_id is not None:
@@ -173,18 +174,23 @@ class ScryfallCache(object):
 
         return card_json
 
-    def _card_from_name(self, name):
+    def _card_from_name(self, name, fuzzy = False):
         """Request a card dictionary by name.
 
         Args:
             name (str): The name of the card.
+            fuzzy (bool): Whether to use fuzzy search on scryfall or not
 
         Returns:
             Dictionary of card data if card is found, else None.
 
         """
         with orm.db_session:
-            results = orm.select(c for c in self.db.Card if c.name == name)
+            if fuzzy:
+                results = orm.select(c for c in self.db.Card if name in c.name)
+            else:
+                results = orm.select(c for c in self.db.Card if c.name == name)
+            
             if not results:
                 results = []
 
@@ -198,7 +204,10 @@ class ScryfallCache(object):
             log.debug("Got %d results for name %s", len(cards_json), name)
 
             # Encode the URL parameters.
-            params = urlencode({"exact": name})
+            if fuzzy:
+                params = urlencode({"fuzzy": name})
+            else:
+                params = urlencode({"exact": name})
 
             # Query the API for what Scryfall thinks is correct.
             card_json = self._query_scryfall(
@@ -384,6 +393,8 @@ class ScryfallCache(object):
         except requests.exceptions.RequestException:
             log.exception("Failed to find information from URL: %s", url)
             return None
+
+    
 
     def get_local_image_path(self, card, art_format):
         """Retrieve the local image path for a given image.
