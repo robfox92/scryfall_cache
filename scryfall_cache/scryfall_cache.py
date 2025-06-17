@@ -268,6 +268,7 @@ class ScryfallCache(object):
     def _save_card(self, card_data):
         # Insert this into the database.
         with orm.db_session:
+            if self.db.Card.select(id = card_data["id"]).first(): return
             log.debug("Saving card information to database for %s", card_data["id"])
             self.db.Card(
                 id=card_data["id"],
