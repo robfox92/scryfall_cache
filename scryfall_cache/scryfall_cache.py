@@ -51,10 +51,10 @@ class ScryfallCache(object):
 
     def __init__(
         self,
-        application=None,
-        version=None,
-        bulk_update_period=TWELVE_WEEKS,
-        sql_debug=False,
+        application: str | None =None,
+        version: str | None =None,
+        bulk_update_period: int =TWELVE_WEEKS,
+        sql_debug: bool =False,
     ):
         """Construct a ScryfallCache object.
 
@@ -106,7 +106,7 @@ class ScryfallCache(object):
         """
         return self.app.user_data_dir
 
-    def get_card(self, name=None, scryfall_id=None, mtgo_id=None, fuzzy_name = False):
+    def get_card(self, name: str | None = None, scryfall_id: str | None =None, mtgo_id: int | None = None, fuzzy_name = False):
         """
         Attempt to get a ScryfallCard object for any given identifiers.
 
@@ -124,7 +124,7 @@ class ScryfallCache(object):
 
         """
         if name is not None:
-            card_dict = self._card_from_name(name, fuzzy_name)
+            card_dict = self._card_from_name(name.strip(), fuzzy_name)
         elif scryfall_id is not None:
             card_dict = self._card_from_id(scryfall_id)
         elif mtgo_id is not None:
@@ -140,7 +140,7 @@ class ScryfallCache(object):
         # Pass a ScryfallCard back to the user.
         return ScryfallCard(self, card_dict)
 
-    def _card_from_id(self, scryfall_id):
+    def _card_from_id(self, scryfall_id: str):
         """Request a card data dictionary by Scryfall ID.
 
         Args:
@@ -174,7 +174,7 @@ class ScryfallCache(object):
 
         return card_json
 
-    def _card_from_name(self, name, fuzzy = False):
+    def _card_from_name(self, name: str, fuzzy: bool = False):
         """Request a card dictionary by name.
 
         Args:
@@ -221,7 +221,7 @@ class ScryfallCache(object):
 
         return card_json
 
-    def _card_from_mtgo_id(self, mtgo_id):
+    def _card_from_mtgo_id(self, mtgo_id: int):
         """Request a card dictionary by MTGO ID.
 
         Args:
@@ -347,7 +347,7 @@ class ScryfallCache(object):
             metadata.lastupdate = int(time.time())
             log.debug("Updated metadata: last update now %d", metadata.lastupdate)
 
-    def _download_scryfall_to_file(self, url, target_path):
+    def _download_scryfall_to_file(self, url: str, target_path):
         tmp_file = "{0}._scry".format(target_path)
         log.debug("Downloading %s to %s", url, tmp_file)
 
@@ -365,7 +365,7 @@ class ScryfallCache(object):
         shutil.move(tmp_file, target_path)
         log.debug("Moved temporary download file %s to %s", tmp_file, target_path)
 
-    def _query_scryfall(self, url, timeout=ONE_DAY):
+    def _query_scryfall(self, url: str, timeout=ONE_DAY):
         with orm.db_session:
             result = self.db.ScryfallResultCache.get(url=url)
 
