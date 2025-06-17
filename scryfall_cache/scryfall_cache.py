@@ -303,7 +303,7 @@ class ScryfallCache(object):
         # Get the URI for the all_cards object.
         for obj in bulkdata["data"]:
             if obj["type"] == self.BULK_DATA_LIST:
-                bulk_data_list_uri = obj["permalink_uri"]
+                bulk_data_list_uri = obj["download_uri"]
                 break
         else:
             raise ScryfallCacheException(
