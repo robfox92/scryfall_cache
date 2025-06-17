@@ -484,8 +484,12 @@ class ScryfallCache(object):
         card_data = card.get_dict()
 
         if "image_uris" not in card_data:
-            log.error("[%s] No images found", card)
-            raise ScryfallCacheException("No images found")
+            if "card_faces" in card_data:
+                # assume we're talking about the "front" face
+                card_data["image_uris"] = card_data["card_faces"][0]["image_uris"]
+            else:
+                log.error("[%s] No images found", card)
+                raise ScryfallCacheException("No images found")
 
         if art_format not in card_data["image_uris"]:
             log.error("[%s] Format %r not found", card, art_format)
