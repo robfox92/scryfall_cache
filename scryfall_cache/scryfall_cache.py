@@ -223,6 +223,23 @@ class ScryfallCache(object):
 
         return card_json
     
+    def _cards_from_oracle_id(self, oracle_id: str):
+        """Locally search for cards based on the oracle id
+        Args: oracle_id(str): The Oracle ID of the card
+        Returns:
+            List of dictionaries of card data, possibly empty
+        
+        """
+        if oracle_id == "": return []
+        with orm.db_session:
+            results = orm.select(
+                c for c in self.db.Card
+                if c.oracle_id == oracle_id
+            )
+            if not results:
+                results = []
+            return [m.data for m in results]
+    
     def _card_from_arena_id(self, arena_id: int):
         """Request a card dictionary by Arena ID.
 
@@ -381,7 +398,7 @@ class ScryfallCache(object):
                     mtgo_id=card_obj.get("mtgo_id", None),
                     mtgo_foil_id=card_obj.get("mtgo_foil_id", None),
                     arena_id = card_obj.get("arena_id", None),
-                    oracle_id = card_obj.get("oracle_id", None),
+                    oracle_id = card_obj.get("oracle_id", ""),
                     data=card_obj,
                 )
 
