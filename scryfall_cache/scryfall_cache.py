@@ -321,6 +321,8 @@ class ScryfallCache(object):
                 name=card_data["name"],
                 mtgo_id=card_data.get("mtgo_id", None),
                 mtgo_foil_id=card_data.get("mtgo_foil_id", None),
+                arena_id = card_data.get("arena_id", None),
+                oracle_id = card_data.get("oracle_id", None),
                 data=card_data,
             )
 
@@ -599,6 +601,7 @@ def define_entities(db):
         mtgo_id = orm.Optional(int, index=True)
         mtgo_foil_id = orm.Optional(int, index=True)
         arena_id = orm.Optional(int, index=True)
+        oracle_id = orm.Optional(str, index=True)
         data = orm.Required(orm.Json)
 
     class Metadata(db.Entity):
