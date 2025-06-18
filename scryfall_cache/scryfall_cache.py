@@ -222,7 +222,7 @@ class ScryfallCache(object):
                 self._save_card(card_json)
 
         return card_json
-    
+
     def _cards_from_oracle_id(self, oracle_id: str):
         """Locally search for cards based on the oracle id
         Args: oracle_id(str): The Oracle ID of the card
@@ -453,7 +453,9 @@ class ScryfallCache(object):
 
             # Store the result in the database.
             with orm.db_session:
-                log.debug("Storing result for url %s at timestamp %d", url, now)
+                log.debug("Storing result for url %s at timestamp %d", url, now)                
+                orm.delete(src for src in self.db.ScryfallResultCache if src.url == url)
+                orm.commit()
                 self.db.ScryfallResultCache(url=url, timestamp=now, data=card_data)
 
             return card_data
@@ -538,10 +540,10 @@ class ScryfallCard(object):
             cache (ScryfallCache): reference to parent Cache object.
             card_dict (dict): Card data dictionary.
         """
-        self._id = card_dict["id"]
-        self._name = card_dict["name"]
-        self._cache = cache
-        self._card_dict = card_dict
+        self._id: str = card_dict["id"]
+        self._name: str = card_dict["name"]
+        self._cache: ScryfallCache = cache
+        self._card_dict: dict = card_dict
 
     def __repr__(self):
         """
