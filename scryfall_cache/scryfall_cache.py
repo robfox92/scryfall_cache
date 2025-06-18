@@ -434,6 +434,18 @@ class ScryfallCache(object):
         log.debug("Moved temporary download file %s to %s", tmp_file, target_path)
 
     def _query_scryfall(self, url: str, timeout=ONE_DAY):
+        page = self._query_scryfall_single_page(url, timeout=timeout)
+        if not page.get("has_more", False):
+            return page
+        # we know there's more 
+        result: list = page.get("data",[])
+        while page.get("has_more", False):
+            url = page["next_page"]
+            page = self._query_scryfall_single_page(url, timeout=timeout)
+            result.extend(page.get("data", []))
+        return result
+
+    def _query_scryfall_single_page(self, url: str, timeout=ONE_DAY):
         with orm.db_session:
             result = self.db.ScryfallResultCache.get(url=url)
 
